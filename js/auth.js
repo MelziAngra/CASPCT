@@ -1,82 +1,75 @@
 // Autenticação via Google Identity Services (GIS).
-// Faz duas coisas: (1) login com a conta Google, (2) autorização de acesso
-// ao Drive/Sheets (apenas arquivos criados por este app, escopo drive.file).
+//
+// O login NÃO é exigido para visualizar o site — as abas de conteúdo são
+// públicas. Ele só é pedido quando alguém tenta inserir um novo registro,
+// vídeo/curso ou guia. Como o app usa escopos amplos do Drive/Sheets (para
+// escrever na pasta/planilha compartilhada da coordenação, que não pertence
+// a quem loga), só e-mails cadastrados como "usuário de teste" no Google
+// Cloud Console conseguem concluir o login — para qualquer outra pessoa o
+// próprio Google bloqueia o acesso.
 
+let gisInitialized = false;
 let gisTokenClient = null;
 let currentUser = null; // { name, email, picture }
-let onAuthReady = null; // callback chamado quando o login+token estiverem prontos
 
-function initGoogleAuth(callback) {
-  onAuthReady = callback;
-
+function initGoogleAuth() {
   google.accounts.id.initialize({
     client_id: CASPCT_CONFIG.CLIENT_ID,
     callback: handleGoogleIdentity,
   });
 
-  google.accounts.id.renderButton(document.getElementById("google-signin-button"), {
-    theme: "outline",
-    size: "large",
-    text: "signin_with",
-    locale: "pt-BR",
-  });
-
   gisTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CASPCT_CONFIG.CLIENT_ID,
     scope: CASPCT_CONFIG.SCOPES,
-    callback: "", // definido dinamicamente em requestDriveAccess()
+    callback: "", // definido dinamicamente em requestLogin()
+  });
+
+  gisInitialized = true;
+}
+
+// Chamado quando a pessoa clica em "Entrar" no topo da página.
+// Retorna uma Promise que resolve com o usuário logado, ou rejeita em caso
+// de erro/recusa.
+function requestLogin() {
+  return new Promise((resolve, reject) => {
+    if (!gisInitialized) {
+      reject(new Error("O login do Google ainda não carregou. Aguarde alguns segundos e tente novamente."));
+      return;
+    }
+    gisTokenClient.callback = (tokenResponse) => {
+      if (tokenResponse.error) {
+        reject(new Error("Login não autorizado. Confirme se o seu e-mail está liberado como usuário de teste no Google Cloud Console."));
+        return;
+      }
+      window.driveAccessToken = tokenResponse.access_token;
+      fetchProfile()
+        .then((user) => {
+          currentUser = user;
+          resolve(user);
+        })
+        .catch(reject);
+    };
+    gisTokenClient.requestAccessToken({ prompt: "" });
   });
 }
 
-function handleGoogleIdentity(response) {
-  const payload = decodeJwt(response.credential);
-  currentUser = {
-    name: payload.name,
-    email: payload.email,
-    picture: payload.picture,
-  };
-  requestDriveAccess();
+async function fetchProfile() {
+  const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+    headers: { Authorization: `Bearer ${window.driveAccessToken}` },
+  });
+  if (!res.ok) throw new Error("Não foi possível obter os dados da conta Google.");
+  const profile = await res.json();
+  return { name: profile.name, email: profile.email, picture: profile.picture };
 }
 
-function requestDriveAccess() {
-  gisTokenClient.callback = (tokenResponse) => {
-    if (tokenResponse.error) {
-      showAuthError(
-        "Não foi possível autorizar o acesso ao Google Drive. Tente novamente."
-      );
-      return;
-    }
-    window.driveAccessToken = tokenResponse.access_token;
-    if (onAuthReady) onAuthReady(currentUser);
-  };
-  gisTokenClient.requestAccessToken({ prompt: "" });
-}
-
-function decodeJwt(token) {
-  const base64Url = token.split(".")[1];
-  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-  const jsonPayload = decodeURIComponent(
-    atob(base64)
-      .split("")
-      .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-      .join("")
-  );
-  return JSON.parse(jsonPayload);
-}
-
-function showAuthError(message) {
-  const el = document.getElementById("auth-error");
-  if (el) {
-    el.textContent = message;
-    el.hidden = false;
-  }
+function isLoggedIn() {
+  return !!window.driveAccessToken && !!currentUser;
 }
 
 function signOut() {
   if (window.driveAccessToken) {
     google.accounts.oauth2.revoke(window.driveAccessToken, () => {});
   }
-  google.accounts.id.disableAutoSelect();
   currentUser = null;
   window.driveAccessToken = null;
   window.location.reload();
