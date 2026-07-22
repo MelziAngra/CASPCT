@@ -1,11 +1,29 @@
 // Liga a interface (abas, formulários, tabelas/cards) às funções de
 // autenticação (auth.js) e Google Drive/Sheets (drive.js).
+//
+// O conteúdo das abas é carregado para QUALQUER visitante, sem login. O
+// login só é pedido na hora de enviar um formulário (inserir um registro,
+// conteúdo ou guia).
 
 document.addEventListener("DOMContentLoaded", () => {
   populateSelects();
   wireTabs();
   wireForms();
-  initGoogleAuth(onLoggedIn);
+  wireLoginButton();
+
+  // O conteúdo público precisa carregar mesmo que o script de login do
+  // Google falhe (rede lenta, bloqueador de anúncios, firewall, etc.).
+  try {
+    initGoogleAuth();
+  } catch (err) {
+    console.error("Falha ao iniciar o login do Google:", err);
+    document.getElementById("login-btn").disabled = true;
+    document.getElementById("login-btn").title = "Login indisponível no momento.";
+  }
+
+  loadAtividades();
+  loadConteudos();
+  loadGuias();
 });
 
 function populateSelects() {
@@ -37,19 +55,35 @@ function wireTabs() {
   });
 }
 
-function onLoggedIn(user) {
-  document.getElementById("login-screen").hidden = true;
-  document.getElementById("app-screen").hidden = false;
+function wireLoginButton() {
+  document.getElementById("login-btn").addEventListener("click", async () => {
+    const errorEl = document.getElementById("auth-error");
+    errorEl.hidden = true;
+    try {
+      const user = await requestLogin();
+      showLoggedInUser(user);
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.hidden = false;
+    }
+  });
+  document.getElementById("signout-btn").addEventListener("click", signOut);
+}
 
+function showLoggedInUser(user) {
+  document.getElementById("login-btn").hidden = true;
   const userBar = document.getElementById("user-bar");
   userBar.hidden = false;
   document.getElementById("user-avatar").src = user.picture;
   document.getElementById("user-name").textContent = user.name;
-  document.getElementById("signout-btn").addEventListener("click", signOut);
+}
 
-  loadAtividades();
-  loadConteudos();
-  loadGuias();
+// Garante que a pessoa está logada antes de continuar um envio de
+// formulário; se ainda não estiver, pede login na hora.
+async function ensureLoggedIn() {
+  if (isLoggedIn()) return;
+  const user = await requestLogin();
+  showLoggedInUser(user);
 }
 
 function setStatus(form, message, isError) {
@@ -71,16 +105,19 @@ async function submitAtividade(event) {
   const form = event.target;
   const submitBtn = form.querySelector("button[type=submit]");
   submitBtn.disabled = true;
-  setStatus(form, "Enviando registro...", false);
 
   try {
+    setStatus(form, "Fazendo login...", false);
+    await ensureLoggedIn();
+
+    setStatus(form, "Enviando registro...", false);
     const data = form.data.value;
     const territorio = form.territorio.value;
     const tipo = form.tipo.value;
     const descricao = form.descricao.value;
     const files = Array.from(form.arquivos.files || []);
 
-    const { atividadesId } = await ensureFolderStructure();
+    const { atividadesId } = await ensureSubfolders();
     const links = files.length ? await driveUploadMultiple(files, atividadesId) : [];
 
     await sheetsAppendRow(CASPCT_CONFIG.SHEETS.atividades, [
@@ -109,9 +146,12 @@ async function submitConteudo(event) {
   const form = event.target;
   const submitBtn = form.querySelector("button[type=submit]");
   submitBtn.disabled = true;
-  setStatus(form, "Publicando conteúdo...", false);
 
   try {
+    setStatus(form, "Fazendo login...", false);
+    await ensureLoggedIn();
+
+    setStatus(form, "Publicando conteúdo...", false);
     const titulo = form.titulo.value;
     const categoria = form.categoria.value;
     const descricao = form.descricao.value;
@@ -119,7 +159,7 @@ async function submitConteudo(event) {
     const arquivo = form.arquivo.files[0];
 
     if (arquivo) {
-      const { conteudosId } = await ensureFolderStructure();
+      const { conteudosId } = await ensureSubfolders();
       const uploaded = await driveUploadFile(arquivo, conteudosId);
       link = uploaded.webViewLink;
     }
@@ -151,9 +191,12 @@ async function submitGuia(event) {
   const form = event.target;
   const submitBtn = form.querySelector("button[type=submit]");
   submitBtn.disabled = true;
-  setStatus(form, "Publicando guia...", false);
 
   try {
+    setStatus(form, "Fazendo login...", false);
+    await ensureLoggedIn();
+
+    setStatus(form, "Publicando guia...", false);
     const titulo = form.titulo.value;
     const tematica = form.tematica.value;
     const descricao = form.descricao.value;
@@ -161,7 +204,7 @@ async function submitGuia(event) {
     const arquivo = form.arquivo.files[0];
 
     if (arquivo) {
-      const { guiasId } = await ensureFolderStructure();
+      const { guiasId } = await ensureSubfolders();
       const uploaded = await driveUploadFile(arquivo, guiasId);
       link = uploaded.webViewLink;
     }
@@ -191,7 +234,7 @@ async function submitGuia(event) {
 async function loadAtividades() {
   const tbody = document.querySelector("#table-atividades tbody");
   try {
-    const rows = await sheetsGetRows(CASPCT_CONFIG.SHEETS.atividades);
+    const rows = await publicReadSheet(CASPCT_CONFIG.SHEETS.atividades);
     tbody.innerHTML = "";
     for (const row of rows.reverse()) {
       const [, usuario, data, territorio, tipo, descricao, documentos] = row;
@@ -207,13 +250,14 @@ async function loadAtividades() {
     }
   } catch (err) {
     console.error(err);
+    showPublicLoadError("#table-atividades", err);
   }
 }
 
 async function loadConteudos() {
   const grid = document.getElementById("grid-conteudos");
   try {
-    const rows = await sheetsGetRows(CASPCT_CONFIG.SHEETS.conteudos);
+    const rows = await publicReadSheet(CASPCT_CONFIG.SHEETS.conteudos);
     grid.innerHTML = "";
     for (const row of rows.reverse()) {
       const [registradoEm, usuario, titulo, categoria, descricao, link] = row;
@@ -223,13 +267,14 @@ async function loadConteudos() {
     }
   } catch (err) {
     console.error(err);
+    showPublicLoadError("#grid-conteudos", err);
   }
 }
 
 async function loadGuias() {
   const grid = document.getElementById("grid-guias");
   try {
-    const rows = await sheetsGetRows(CASPCT_CONFIG.SHEETS.guias);
+    const rows = await publicReadSheet(CASPCT_CONFIG.SHEETS.guias);
     grid.innerHTML = "";
     for (const row of rows.reverse()) {
       const [registradoEm, usuario, titulo, tematica, descricao, link] = row;
@@ -239,7 +284,13 @@ async function loadGuias() {
     }
   } catch (err) {
     console.error(err);
+    showPublicLoadError("#grid-guias", err);
   }
+}
+
+function showPublicLoadError(containerSelector, err) {
+  const el = document.querySelector(containerSelector);
+  if (el) el.innerHTML = `<p class="error-text">Não foi possível carregar os dados públicos agora: ${escapeHtml(err.message)}</p>`;
 }
 
 function renderCard({ tag, titulo, descricao, link, usuario, registradoEm }) {

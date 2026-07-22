@@ -40,29 +40,32 @@ body {
 }
 .topbar-title p { margin: 0.1rem 0 0; font-size: 0.85rem; color: #55606b; }
 
+.auth-area { display: flex; align-items: center; }
 .user-bar { display: flex; align-items: center; gap: 0.6rem; }
 .user-avatar { width: 32px; height: 32px; border-radius: 50%; }
 .btn-link {
   background: none; border: none; color: var(--azul); cursor: pointer;
   text-decoration: underline; font-size: 0.9rem;
 }
+.btn-small { padding: 0.45rem 0.9rem; font-size: 0.85rem; }
 
 main { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
 
-.login-screen { display: flex; justify-content: center; margin-top: 3rem; }
-.login-card {
-  background: var(--branco);
-  border: 1px solid var(--borda);
-  border-radius: 12px;
-  padding: 2rem;
-  max-width: 420px;
-  text-align: center;
-  box-shadow: 0 4px 16px rgba(18, 48, 95, 0.08);
-}
-.login-card h2 { color: var(--azul-escuro); }
-.login-card #google-signin-button { display: flex; justify-content: center; margin-top: 1.2rem; }
-
 .error-text { color: var(--vermelho-erro); margin-top: 1rem; }
+.auth-error-banner {
+  max-width: 960px; margin: 0.75rem auto 0; padding: 0 1.5rem;
+  text-align: center;
+}
+
+.public-notice {
+  background: var(--azul-claro);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: var(--azul-escuro);
+  margin-bottom: 1.25rem;
+}
 
 .tabs {
   display: flex; gap: 0.4rem; flex-wrap: wrap;

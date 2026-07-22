@@ -1,7 +1,7 @@
 # CASPCT - Sistema de Registro de Território
 
 Site estático (sem servidor próprio) para a **Coordenação de Atenção à Saúde de
-Povos e Comunidades Tradicionais (CASPCT)** registrar:
+Povos e Comunidades Tradicionais (CASPCT)** publicar e registrar:
 
 - **Registro Diário**: atividades realizadas no território (data, comunidade
   tradicional, tipo de atividade, descrição e documentos).
@@ -11,86 +11,125 @@ Povos e Comunidades Tradicionais (CASPCT)** registrar:
   6.040/2007 — Política Nacional de Desenvolvimento Sustentável dos Povos e
   Comunidades Tradicionais).
 
-Cada pessoa entra com a própria conta Google. Os documentos enviados e as
-planilhas de registro são salvos **no Google Drive de quem estiver logado**
-(pasta "CASPCT - Registros", criada automaticamente no primeiro uso). Não há
-banco de dados nem backend: tudo roda no navegador.
+## Como funciona o acesso
 
-> Se a ideia é centralizar tudo numa única conta/pasta da coordenação (em vez
-> de cada pessoa ter sua própria cópia), basta a pessoa responsável logar com
-> a conta da coordenação sempre que for consolidar os registros, ou combinar
-> de todos usarem a mesma conta institucional para logar no sistema.
+- **Ver o conteúdo é público.** Qualquer pessoa que abrir o link consegue ver
+  os registros, vídeos/cursos e guias, sem precisar fazer login.
+- **Inserir conteúdo exige login com Google**, e só funciona para quem estiver
+  cadastrado como "usuário de teste" do projeto no Google Cloud Console — para
+  qualquer outra pessoa, o próprio Google recusa o login. Não existe senha
+  cadastrada no site: o controle de quem pode inserir é feito inteiramente
+  pela lista de usuários de teste (passo 3 abaixo).
+- Todos os dados (planilha e documentos) ficam numa **pasta e planilha únicas
+  do Google Drive, de uma conta institucional da coordenação** — não no Drive
+  de cada pessoa que loga. Não há banco de dados nem backend: tudo roda no
+  navegador, direto contra as APIs do Google Drive/Sheets.
 
-## 1. Criar as credenciais do Google (OAuth Client ID)
+## Preparo único (antes de usar)
 
-Isso só precisa ser feito **uma vez**, por quem administra o projeto.
+Esses passos só precisam ser feitos **uma vez**, pela conta institucional da
+coordenação.
+
+### 1. Criar a pasta e a planilha compartilhadas
+
+Logado com a **conta institucional** da CASPCT no https://drive.google.com:
+
+1. Crie uma pasta chamada, por exemplo, **"CASPCT - Registros"**.
+2. Clique com o botão direito na pasta > **Compartilhar > Acesso geral** >
+   mude de "Restrito" para **"Qualquer pessoa com o link"**, com papel
+   **"Leitor"**. Isso permite que o público veja/abra os documentos.
+3. Ainda em "Compartilhar", **adicione o e-mail de cada pessoa da equipe** que
+   vai inserir registros, com papel **"Editor"**.
+4. Copie o **ID da pasta**: é o trecho da URL depois de `/folders/`, por
+   exemplo em `drive.google.com/drive/folders/1AbCdEfGhIjK...`, o ID é
+   `1AbCdEfGhIjK...`.
+5. Dentro dessa pasta, crie uma planilha Google Sheets chamada, por exemplo,
+   **"CASPCT - Sistema de Registro"**, com três abas (nomes exatos):
+   `Atividades`, `Conteudos` e `Guias`. Em cada aba, coloque na primeira linha
+   os cabeçalhos:
+   - **Atividades**: `Registrado em`, `Usuário`, `Data da atividade`,
+     `Território/Comunidade`, `Tipo de atividade`, `Descrição`, `Documentos`
+   - **Conteudos**: `Registrado em`, `Usuário`, `Título`, `Categoria`,
+     `Descrição`, `Link`
+   - **Guias**: `Registrado em`, `Usuário`, `Título`, `Temática de saúde`,
+     `Descrição`, `Link`
+6. Compartilhe a planilha do mesmo jeito que a pasta: **"Qualquer pessoa com o
+   link" / "Leitor"** para o público, e **"Editor"** para cada pessoa da
+   equipe.
+7. Copie o **ID da planilha**: é o trecho da URL depois de `/d/`, por exemplo
+   em `docs.google.com/spreadsheets/d/1XyZ.../edit`, o ID é `1XyZ...`.
+
+### 2. Criar as credenciais do Google (OAuth Client ID)
 
 1. Acesse https://console.cloud.google.com/ e crie um novo projeto (ex:
    "CASPCT Registro").
-2. No menu lateral, vá em **APIs e serviços > Biblioteca** e ative:
+2. Em **APIs e serviços > Biblioteca**, ative:
    - **Google Drive API**
    - **Google Sheets API**
-3. Vá em **APIs e serviços > Tela de consentimento OAuth**:
-   - Tipo de usuário: **Externo** (ou **Interno**, se todos usarem contas
-     `@upe.br`/institucionais do mesmo Google Workspace).
-   - Preencha nome do app ("CASPCT - Registro de Território"), e-mail de
-     suporte e e-mail de contato.
-   - Em **Escopos**, não é necessário adicionar nada manualmente (o app pede
-     o escopo em tempo de execução).
-   - Em **Usuários de teste** (se o app ficar em modo "Testing"), adicione os
-     e-mails de todas as pessoas que vão usar o sistema (limite de 100). Isso
-     evita ter que passar pelo processo de verificação do Google, já que é um
-     uso interno.
-4. Vá em **APIs e serviços > Credenciais > Criar credenciais > ID do cliente
+3. Em **APIs e serviços > Tela de consentimento OAuth**:
+   - Tipo de usuário: **Externo** (ou **Interno**, se todos usarem contas do
+     mesmo Google Workspace institucional).
+   - Preencha nome do app, e-mail de suporte e e-mail de contato.
+   - Em **Usuários de teste**, adicione o e-mail de **cada pessoa da equipe**
+     que vai inserir conteúdo (limite de 100). **Só quem estiver nessa lista
+     consegue logar** — esse é o controle de acesso do site.
+4. Em **APIs e serviços > Credenciais > Criar credenciais > ID do cliente
    OAuth**:
    - Tipo de aplicativo: **Aplicativo da Web**.
    - Em **Origens JavaScript autorizadas**, adicione a URL onde o site vai
-     ficar publicado, por exemplo:
-     `https://melziangra.github.io`
-     (ajuste para o domínio real do GitHub Pages — veja o passo 3).
-   - Não é necessário preencher "URIs de redirecionamento".
-   - Clique em criar e copie o **Client ID** gerado (algo como
-     `123456789-abc.apps.googleusercontent.com`).
+     ficar publicado, por exemplo `https://melziangra.github.io` (sem
+     caminho, só o domínio — ajuste se for diferente, veja o passo 4).
+   - Copie o **Client ID** gerado.
 
-## 2. Configurar o Client ID no projeto
+> Como o app pede acesso amplo ao Drive/Sheets (para poder escrever na pasta
+> da coordenação, que não pertence a quem loga), o Google mostra uma tela de
+> aviso "app não verificado" para os usuários de teste. Isso é normal para
+> ferramentas internas: quem for logar deve clicar em **Avançado** e depois em
+> **Ir para [nome do app] (não seguro)** para continuar.
 
-Abra o arquivo [`js/config.js`](js/config.js) e substitua:
+### 3. Preencher `js/config.js`
+
+Abra [`js/config.js`](js/config.js) e preencha os três valores:
 
 ```js
-CLIENT_ID: "SEU_CLIENT_ID_AQUI.apps.googleusercontent.com",
+CLIENT_ID: "...",                 // do passo 2
+SHARED_FOLDER_ID: "...",          // do passo 1.4
+SHARED_SPREADSHEET_ID: "...",     // do passo 1.7
 ```
 
-pelo Client ID copiado no passo anterior. Depois, faça commit e push dessa
-alteração.
+Depois, faça commit e push dessas alterações.
 
-## 3. Publicar no GitHub Pages
+### 4. Publicar no GitHub Pages
 
 1. No GitHub, abra o repositório e vá em **Settings > Pages**.
 2. Em **Source**, selecione a branch onde este código está (ex: `main`) e a
-   pasta `/ (root)`.
+   pasta `/ (root)`. Deixe o campo **"Custom domain" em branco**, a não ser
+   que você realmente tenha um domínio próprio configurado.
 3. Salve. Em alguns minutos o site estará disponível em uma URL do tipo:
    `https://<usuario-ou-organizacao>.github.io/<nome-do-repositorio>/`
-4. Volte ao passo 1 e confirme que essa URL está cadastrada em **Origens
-   JavaScript autorizadas** no Google Cloud Console (sem isso o login falha).
+4. Volte ao Google Cloud Console (passo 2) e confirme que essa URL (só o
+   domínio, sem o caminho) está cadastrada em **Origens JavaScript
+   autorizadas** — sem isso o login falha.
 
-## 4. Uso do dia a dia
+## Uso do dia a dia
 
-- Cada pessoa acessa o link do GitHub Pages e faz login com a conta Google.
-- Na primeira vez, o Google vai pedir permissão para o app acessar o Drive —
-  isso é esperado, e o acesso é restrito apenas a arquivos que o próprio app
-  cria (escopo `drive.file`), nunca aos outros arquivos da conta.
-- Os registros ficam disponíveis na própria página (tabelas e cards) e também
-  podem ser conferidos diretamente na planilha "CASPCT - Sistema de Registro"
-  e na pasta "CASPCT - Registros", dentro do Google Drive de quem logou.
+- **Qualquer visitante** abre o link e já vê o conteúdo das quatro abas, sem
+  precisar logar.
+- **Quem for da equipe** clica em "Entrar (equipe CASPCT)" no topo, loga com a
+  própria conta Google (a mesma cadastrada como usuário de teste) e passa a
+  conseguir enviar os formulários de registro/conteúdo/guia.
+- Para adicionar ou remover alguém da equipe, é só atualizar a lista de
+  **usuários de teste** no Google Cloud Console e a lista de **Editores** na
+  pasta/planilha do Drive.
 
 ## Estrutura de arquivos
 
 ```
 index.html        Estrutura da página e das abas
 style.css         Estilo visual
-js/config.js      Client ID, nomes de pastas/planilha e opções dos formulários
-js/auth.js        Login Google + autorização de acesso ao Drive
-js/drive.js       Chamadas às APIs do Google Drive e Google Sheets
+js/config.js      Client ID, IDs da pasta/planilha compartilhadas e opções dos formulários
+js/auth.js        Login Google sob demanda (só ao inserir conteúdo)
+js/drive.js       Leitura pública (Google Visualization API) e escrita autenticada (Drive/Sheets API)
 js/app.js         Lógica das abas, formulários e listagens
 assets/           Logos da Secretaria da Saúde e da CASPCT
 ```

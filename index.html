@@ -18,27 +18,27 @@
     <h1>CASPCT</h1>
     <p>Coordenação de Atenção à Saúde de Povos e Comunidades Tradicionais</p>
   </div>
-  <div id="user-bar" class="user-bar" hidden>
-    <img id="user-avatar" class="user-avatar" alt="" />
-    <span id="user-name"></span>
-    <button id="signout-btn" class="btn-link">Sair</button>
+  <div class="auth-area">
+    <button id="login-btn" class="btn-primary btn-small">Entrar (equipe CASPCT)</button>
+    <div id="user-bar" class="user-bar" hidden>
+      <img id="user-avatar" class="user-avatar" alt="" />
+      <span id="user-name"></span>
+      <button id="signout-btn" class="btn-link">Sair</button>
+    </div>
   </div>
 </header>
 
+<p id="auth-error" class="error-text auth-error-banner" hidden></p>
+
 <main>
 
-  <!-- TELA DE LOGIN -->
-  <section id="login-screen" class="login-screen">
-    <div class="login-card">
-      <h2>Entrar no sistema</h2>
-      <p>Faça login com sua conta Google institucional para registrar as atividades da CASPCT no território.</p>
-      <div id="google-signin-button"></div>
-      <p id="auth-error" class="error-text" hidden></p>
-    </div>
-  </section>
+  <!-- APLICAÇÃO: conteúdo público, visível para qualquer visitante -->
+  <section id="app-screen">
 
-  <!-- APLICAÇÃO -->
-  <section id="app-screen" hidden>
+    <p class="public-notice">
+      Este site é aberto ao público. Só é preciso fazer login para <strong>inserir</strong> novos
+      registros, vídeos/cursos ou guias — reservado à equipe da CASPCT.
+    </p>
 
     <nav class="tabs">
       <button class="tab-btn active" data-tab="atividades">Registro Diário</button>
