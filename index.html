@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CASPCT - Sistema de Registro de Território</title>
+<link rel="stylesheet" href="style.css" />
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-logos">
+    <img src="assets/logo-secretaria.jpeg" alt="Secretaria da Saúde" class="logo logo-secretaria" />
+    <img src="assets/logo-caspct.png" alt="CASPCT" class="logo logo-caspct" />
+  </div>
+  <div class="topbar-title">
+    <h1>CASPCT</h1>
+    <p>Coordenação de Atenção à Saúde de Povos e Comunidades Tradicionais</p>
+  </div>
+  <div id="user-bar" class="user-bar" hidden>
+    <img id="user-avatar" class="user-avatar" alt="" />
+    <span id="user-name"></span>
+    <button id="signout-btn" class="btn-link">Sair</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- TELA DE LOGIN -->
+  <section id="login-screen" class="login-screen">
+    <div class="login-card">
+      <h2>Entrar no sistema</h2>
+      <p>Faça login com sua conta Google institucional para registrar as atividades da CASPCT no território.</p>
+      <div id="google-signin-button"></div>
+      <p id="auth-error" class="error-text" hidden></p>
+    </div>
+  </section>
+
+  <!-- APLICAÇÃO -->
+  <section id="app-screen" hidden>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="atividades">Registro Diário</button>
+      <button class="tab-btn" data-tab="conteudos">Minivídeos e Minicursos</button>
+      <button class="tab-btn" data-tab="guias">Guias e Temáticas de Saúde</button>
+      <button class="tab-btn" data-tab="sobre">Sobre a CASPCT</button>
+    </nav>
+
+    <!-- ABA: REGISTRO DIÁRIO -->
+    <div class="tab-panel active" id="tab-atividades">
+      <h2>Registro diário de atividades no território</h2>
+      <form id="form-atividades" class="card-form">
+        <label>Data da atividade
+          <input type="date" name="data" required />
+        </label>
+        <label>Território / comunidade tradicional
+          <select name="territorio" required>
+            <option value="" disabled selected>Selecione...</option>
+          </select>
+        </label>
+        <label>Tipo de atividade
+          <select name="tipo" required>
+            <option value="" disabled selected>Selecione...</option>
+          </select>
+        </label>
+        <label>Descrição da atividade realizada
+          <textarea name="descricao" rows="4" required></textarea>
+        </label>
+        <label>Documentos (fotos, relatórios, listas de presença...)
+          <input type="file" name="arquivos" multiple />
+        </label>
+        <button type="submit" class="btn-primary">Salvar registro</button>
+        <p class="form-status" hidden></p>
+      </form>
+
+      <h3>Registros salvos</h3>
+      <div class="table-wrap">
+        <table id="table-atividades">
+          <thead>
+            <tr><th>Data</th><th>Usuário</th><th>Território</th><th>Tipo</th><th>Descrição</th><th>Documentos</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ABA: MINIVÍDEOS E MINICURSOS -->
+    <div class="tab-panel" id="tab-conteudos">
+      <h2>Minivídeos e minicursos</h2>
+      <p class="tab-intro">Adicione vídeos curtos e minicursos produzidos pela coordenação (upload direto ou link externo, como YouTube).</p>
+      <form id="form-conteudos" class="card-form">
+        <label>Título
+          <input type="text" name="titulo" required />
+        </label>
+        <label>Categoria
+          <select name="categoria" required>
+            <option value="" disabled selected>Selecione...</option>
+          </select>
+        </label>
+        <label>Descrição
+          <textarea name="descricao" rows="3"></textarea>
+        </label>
+        <label>Link externo (YouTube, Drive, etc.) — opcional se for enviar arquivo
+          <input type="url" name="link" placeholder="https://..." />
+        </label>
+        <label>Ou envie um arquivo de vídeo/material
+          <input type="file" name="arquivo" />
+        </label>
+        <button type="submit" class="btn-primary">Publicar conteúdo</button>
+        <p class="form-status" hidden></p>
+      </form>
+
+      <h3>Conteúdos publicados</h3>
+      <div class="card-grid" id="grid-conteudos"></div>
+    </div>
+
+    <!-- ABA: GUIAS E TEMÁTICAS -->
+    <div class="tab-panel" id="tab-guias">
+      <h2>Guias e materiais sobre temáticas de saúde</h2>
+      <p class="tab-intro">Guias, cartilhas e materiais produzidos pela CASPCT, organizados por temática de saúde.</p>
+      <form id="form-guias" class="card-form">
+        <label>Título do guia/material
+          <input type="text" name="titulo" required />
+        </label>
+        <label>Temática de saúde
+          <select name="tematica" required>
+            <option value="" disabled selected>Selecione...</option>
+          </select>
+        </label>
+        <label>Descrição
+          <textarea name="descricao" rows="3"></textarea>
+        </label>
+        <label>Arquivo do guia (PDF, imagem, documento)
+          <input type="file" name="arquivo" />
+        </label>
+        <label>Ou link externo
+          <input type="url" name="link" placeholder="https://..." />
+        </label>
+        <button type="submit" class="btn-primary">Publicar guia</button>
+        <p class="form-status" hidden></p>
+      </form>
+
+      <h3>Guias publicados</h3>
+      <div class="card-grid" id="grid-guias"></div>
+    </div>
+
+    <!-- ABA: SOBRE -->
+    <div class="tab-panel" id="tab-sobre">
+      <h2>Sobre a CASPCT</h2>
+      <p>
+        A Coordenação de Atenção à Saúde de Povos e Comunidades Tradicionais (CASPCT) atua na
+        articulação e no acompanhamento de ações de saúde voltadas aos povos e comunidades
+        tradicionais no âmbito do SUS em Pernambuco, incluindo povos indígenas, comunidades
+        quilombolas, povos ciganos, povos de terreiro, comunidades ribeirinhas, pescadores e
+        pescadoras artesanais, povos de fundo de pasto e extrativistas.
+      </p>
+
+      <h3>Base legal</h3>
+      <p>
+        As ações da CASPCT têm como referência o <strong>Decreto Federal nº 6.040, de 7 de
+        fevereiro de 2007</strong>, que institui a Política Nacional de Desenvolvimento
+        Sustentável dos Povos e Comunidades Tradicionais (PNPCT). O decreto define Povos e
+        Comunidades Tradicionais como:
+      </p>
+      <blockquote>
+        "Grupos culturalmente diferenciados e que se reconhecem como tais, que possuem formas
+        próprias de organização social, que ocupam e usam territórios e recursos naturais como
+        condição para sua reprodução cultural, social, religiosa, ancestral e econômica,
+        utilizando conhecimentos, inovações e práticas gerados e transmitidos pela tradição."
+        <cite>— Decreto nº 6.040/2007, art. 3º, inciso I</cite>
+      </blockquote>
+      <p>
+        Esse reconhecimento orienta o planejamento das visitas técnicas, o monitoramento de
+        indicadores de saúde e a produção de materiais educativos voltados a essas populações,
+        respeitando suas especificidades culturais, sociais e territoriais.
+      </p>
+
+      <h3>Segmentos atendidos</h3>
+      <ul class="segment-list">
+        <li>Povos Indígenas</li>
+        <li>Comunidades Quilombolas</li>
+        <li>Povos Ciganos</li>
+        <li>Povos de Terreiro / Matriz Africana</li>
+        <li>Comunidades Ribeirinhas</li>
+        <li>Pescadores e Pescadoras Artesanais</li>
+        <li>Povos de Fundo de Pasto</li>
+        <li>Extrativistas</li>
+      </ul>
+    </div>
+
+  </section>
+
+</main>
+
+<footer>
+  <p>CASPCT · Coordenação de Atenção à Saúde de Povos e Comunidades Tradicionais · Secretaria da Saúde</p>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/drive.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
