@@ -1,11 +1,11 @@
 // Configurações do sistema CASPCT.
 //
-// Duas coisas precisam ser preenchidas depois de um preparo único feito pela
-// conta institucional da coordenação (veja o passo a passo no README.md):
-//   1. CLIENT_ID: credencial OAuth do Google Cloud Console.
-//   2. SHARED_FOLDER_ID / SHARED_SPREADSHEET_ID: a pasta e a planilha
-//      "oficiais" da CASPCT no Google Drive, compartilhadas publicamente
-//      para leitura e com a equipe autorizada para edição.
+// CLIENT_ID: credencial OAuth do Google Cloud Console.
+// SHARED_FOLDER_ID / SPREADSHEET_IDS: a pasta e as 3 planilhas "oficiais" da
+// CASPCT no Google Drive (uma planilha por tipo de conteúdo, cada uma com
+// uma única aba), compartilhadas publicamente para leitura e com a equipe
+// autorizada para edição. Veja o passo a passo de compartilhamento no
+// README.md, seção "Preparo único".
 const CASPCT_CONFIG = {
   CLIENT_ID: "35105006923-45lc7pphk0ugvr4i4jalif4lqcv581d4.apps.googleusercontent.com",
 
@@ -20,20 +20,17 @@ const CASPCT_CONFIG = {
     "https://www.googleapis.com/auth/spreadsheets",
   ].join(" "),
 
-  // IDs da pasta e da planilha "oficiais" da CASPCT (preencher depois do
-  // preparo único — veja README.md, seção "Preparo único").
-  SHARED_FOLDER_ID: "COLOQUE_AQUI_O_ID_DA_PASTA_COMPARTILHADA",
-  SHARED_SPREADSHEET_ID: "COLOQUE_AQUI_O_ID_DA_PLANILHA_COMPARTILHADA",
+  SHARED_FOLDER_ID: "1dlSIqMuObmY4x-SbHpTA6rX0E0D4C50M",
+  SPREADSHEET_IDS: {
+    atividades: "1WmzN_8nFfOe6iihJaj5YgaMtgCY-93Xgy_MLfCQcOdc",
+    conteudos: "1ecdxgUMk2oNgHbdZF6UYaILxW1OwZdz77BzgHTmOWeA",
+    guias: "1tSxq2wSa3U9Fma3JSuGlswW-2C5o7-fpfB5TgCO54Xc",
+  },
 
   SUBFOLDERS: {
     atividades: "Documentos de Atividades no Território",
     conteudos: "Minivídeos e Minicursos",
     guias: "Guias e Materiais Temáticos",
-  },
-  SHEETS: {
-    atividades: "Atividades",
-    conteudos: "Conteudos",
-    guias: "Guias",
   },
 
   // Segmentos de povos e comunidades tradicionais atendidos pela CASPCT,

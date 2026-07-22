@@ -120,7 +120,7 @@ async function submitAtividade(event) {
     const { atividadesId } = await ensureSubfolders();
     const links = files.length ? await driveUploadMultiple(files, atividadesId) : [];
 
-    await sheetsAppendRow(CASPCT_CONFIG.SHEETS.atividades, [
+    await sheetsAppendRow("atividades", [
       new Date().toLocaleString("pt-BR"),
       currentUser.email,
       data,
@@ -166,7 +166,7 @@ async function submitConteudo(event) {
 
     if (!link) throw new Error("Informe um link ou envie um arquivo.");
 
-    await sheetsAppendRow(CASPCT_CONFIG.SHEETS.conteudos, [
+    await sheetsAppendRow("conteudos", [
       new Date().toLocaleString("pt-BR"),
       currentUser.email,
       titulo,
@@ -211,7 +211,7 @@ async function submitGuia(event) {
 
     if (!link) throw new Error("Informe um link ou envie um arquivo.");
 
-    await sheetsAppendRow(CASPCT_CONFIG.SHEETS.guias, [
+    await sheetsAppendRow("guias", [
       new Date().toLocaleString("pt-BR"),
       currentUser.email,
       titulo,
@@ -234,7 +234,7 @@ async function submitGuia(event) {
 async function loadAtividades() {
   const tbody = document.querySelector("#table-atividades tbody");
   try {
-    const rows = await publicReadSheet(CASPCT_CONFIG.SHEETS.atividades);
+    const rows = await publicReadSheet("atividades");
     tbody.innerHTML = "";
     for (const row of rows.reverse()) {
       const [, usuario, data, territorio, tipo, descricao, documentos] = row;
@@ -257,7 +257,7 @@ async function loadAtividades() {
 async function loadConteudos() {
   const grid = document.getElementById("grid-conteudos");
   try {
-    const rows = await publicReadSheet(CASPCT_CONFIG.SHEETS.conteudos);
+    const rows = await publicReadSheet("conteudos");
     grid.innerHTML = "";
     for (const row of rows.reverse()) {
       const [registradoEm, usuario, titulo, categoria, descricao, link] = row;
@@ -274,7 +274,7 @@ async function loadConteudos() {
 async function loadGuias() {
   const grid = document.getElementById("grid-guias");
   try {
-    const rows = await publicReadSheet(CASPCT_CONFIG.SHEETS.guias);
+    const rows = await publicReadSheet("guias");
     grid.innerHTML = "";
     for (const row of rows.reverse()) {
       const [registradoEm, usuario, titulo, tematica, descricao, link] = row;

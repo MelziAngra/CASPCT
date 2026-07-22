@@ -1,14 +1,16 @@
 // Funções de acesso ao Google Drive e Google Planilhas (Sheets).
 //
-// Leitura (para qualquer visitante, sem login): busca os dados direto da
-// planilha compartilhada da CASPCT através do endpoint público do Google
-// Visualization API — funciona porque a planilha está compartilhada como
+// Leitura (para qualquer visitante, sem login): busca os dados direto das
+// planilhas compartilhadas da CASPCT através do endpoint público do Google
+// Visualization API — funciona porque cada planilha está compartilhada como
 // "Qualquer pessoa com o link pode visualizar". Não usa nenhuma chave de
-// API nem exige autenticação.
+// API nem exige autenticação. Cada categoria (atividades/conteúdos/guias)
+// tem sua própria planilha (config.js: SPREADSHEET_IDS), com uma única aba,
+// por isso não é preciso informar o nome da aba — sempre a primeira/única.
 //
 // Escrita (só depois de login): usa fetch + o token de acesso obtido em
-// auth.js, contra a pasta/planilha fixas configuradas em config.js
-// (SHARED_FOLDER_ID / SHARED_SPREADSHEET_ID).
+// auth.js, contra a pasta/planilhas fixas configuradas em config.js
+// (SHARED_FOLDER_ID / SPREADSHEET_IDS).
 
 const DRIVE_API = "https://www.googleapis.com/drive/v3";
 const DRIVE_UPLOAD_API = "https://www.googleapis.com/upload/drive/v3";
@@ -32,8 +34,9 @@ async function apiFetch(url, options = {}) {
 
 // ---------- Leitura pública (sem login) ----------
 
-async function publicReadSheet(sheetName) {
-  const url = `https://docs.google.com/spreadsheets/d/${CASPCT_CONFIG.SHARED_SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+async function publicReadSheet(categoria) {
+  const spreadsheetId = CASPCT_CONFIG.SPREADSHEET_IDS[categoria];
+  const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json`;
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(
@@ -127,10 +130,10 @@ async function driveUploadMultiple(files, folderId) {
   return links;
 }
 
-async function sheetsAppendRow(sheetName, values) {
-  const spreadsheetId = CASPCT_CONFIG.SHARED_SPREADSHEET_ID;
+async function sheetsAppendRow(categoria, values) {
+  const spreadsheetId = CASPCT_CONFIG.SPREADSHEET_IDS[categoria];
   await apiFetch(
-    `${SHEETS_API}/${spreadsheetId}/values/${encodeURIComponent(sheetName)}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    `${SHEETS_API}/${spreadsheetId}/values/A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
