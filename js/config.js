@@ -2,7 +2,7 @@
 // Preencha CLIENT_ID depois de criar as credenciais OAuth no Google Cloud Console
 // (veja o passo a passo no README.md).
 const CASPCT_CONFIG = {
-  CLIENT_ID: "SEU_CLIENT_ID_AQUI.apps.googleusercontent.com",
+  CLIENT_ID: "35105006923-45lc7pphk0ugvr4i4jalif4lqcv581d4.apps.googleusercontent.com",
 
   // Apenas o escopo drive.file: o app só enxerga/edita arquivos que ele mesmo cria.
   SCOPES: "https://www.googleapis.com/auth/drive.file",
