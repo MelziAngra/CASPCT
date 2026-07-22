@@ -20,44 +20,40 @@ Povos e Comunidades Tradicionais (CASPCT)** publicar e registrar:
   qualquer outra pessoa, o próprio Google recusa o login. Não existe senha
   cadastrada no site: o controle de quem pode inserir é feito inteiramente
   pela lista de usuários de teste (passo 3 abaixo).
-- Todos os dados (planilha e documentos) ficam numa **pasta e planilha únicas
-  do Google Drive, de uma conta institucional da coordenação** — não no Drive
-  de cada pessoa que loga. Não há banco de dados nem backend: tudo roda no
-  navegador, direto contra as APIs do Google Drive/Sheets.
+- Todos os dados (planilhas e documentos) ficam numa **pasta e planilhas
+  únicas do Google Drive**, na conta institucional da coordenação — não no
+  Drive de cada pessoa que loga. Não há banco de dados nem backend: tudo roda
+  no navegador, direto contra as APIs do Google Drive/Sheets.
+- Em vez de uma única planilha com três abas, existem **três planilhas
+  separadas** (uma para Atividades, uma para Conteúdos e uma para Guias),
+  cada uma com uma única aba — isso simplifica a leitura pública dos dados.
 
 ## Preparo único (antes de usar)
 
 Esses passos só precisam ser feitos **uma vez**, pela conta institucional da
 coordenação.
 
-### 1. Criar a pasta e a planilha compartilhadas
+### 1. Compartilhar a pasta e as planilhas
 
-Logado com a **conta institucional** da CASPCT no https://drive.google.com:
+A pasta **"CASPCT - Registros"** e as três planilhas dentro dela (**"CASPCT -
+Atividades"**, **"CASPCT - Conteudos"**, **"CASPCT - Guias"**) já foram
+criadas e os IDs já estão preenchidos em [`js/config.js`](js/config.js). Falta
+só configurar o compartilhamento — isso não dá para automatizar, precisa ser
+feito manualmente pela tela do Google Drive:
 
-1. Crie uma pasta chamada, por exemplo, **"CASPCT - Registros"**.
+1. Abra a pasta **"CASPCT - Registros"** no https://drive.google.com.
 2. Clique com o botão direito na pasta > **Compartilhar > Acesso geral** >
    mude de "Restrito" para **"Qualquer pessoa com o link"**, com papel
-   **"Leitor"**. Isso permite que o público veja/abra os documentos.
+   **"Leitor"**. Isso permite que o público abra os documentos enviados.
 3. Ainda em "Compartilhar", **adicione o e-mail de cada pessoa da equipe** que
    vai inserir registros, com papel **"Editor"**.
-4. Copie o **ID da pasta**: é o trecho da URL depois de `/folders/`, por
-   exemplo em `drive.google.com/drive/folders/1AbCdEfGhIjK...`, o ID é
-   `1AbCdEfGhIjK...`.
-5. Dentro dessa pasta, crie uma planilha Google Sheets chamada, por exemplo,
-   **"CASPCT - Sistema de Registro"**, com três abas (nomes exatos):
-   `Atividades`, `Conteudos` e `Guias`. Em cada aba, coloque na primeira linha
-   os cabeçalhos:
-   - **Atividades**: `Registrado em`, `Usuário`, `Data da atividade`,
-     `Território/Comunidade`, `Tipo de atividade`, `Descrição`, `Documentos`
-   - **Conteudos**: `Registrado em`, `Usuário`, `Título`, `Categoria`,
-     `Descrição`, `Link`
-   - **Guias**: `Registrado em`, `Usuário`, `Título`, `Temática de saúde`,
-     `Descrição`, `Link`
-6. Compartilhe a planilha do mesmo jeito que a pasta: **"Qualquer pessoa com o
-   link" / "Leitor"** para o público, e **"Editor"** para cada pessoa da
-   equipe.
-7. Copie o **ID da planilha**: é o trecho da URL depois de `/d/`, por exemplo
-   em `docs.google.com/spreadsheets/d/1XyZ.../edit`, o ID é `1XyZ...`.
+4. Repita os passos 2 e 3 para **cada uma das três planilhas** dentro da
+   pasta (Atividades, Conteudos, Guias): "Qualquer pessoa com o link" /
+   "Leitor" para o público, e "Editor" para cada pessoa da equipe.
+
+> Se no futuro for preciso recriar a pasta ou as planilhas (ou criar em outra
+> conta), os IDs ficam na URL: o ID da pasta é o trecho depois de `/folders/`,
+> e o ID de uma planilha é o trecho depois de `/d/` na URL do Google Sheets.
 
 ### 2. Criar as credenciais do Google (OAuth Client ID)
 
@@ -87,17 +83,11 @@ Logado com a **conta institucional** da CASPCT no https://drive.google.com:
 > ferramentas internas: quem for logar deve clicar em **Avançado** e depois em
 > **Ir para [nome do app] (não seguro)** para continuar.
 
-### 3. Preencher `js/config.js`
+### 3. Conferir `js/config.js`
 
-Abra [`js/config.js`](js/config.js) e preencha os três valores:
-
-```js
-CLIENT_ID: "...",                 // do passo 2
-SHARED_FOLDER_ID: "...",          // do passo 1.4
-SHARED_SPREADSHEET_ID: "...",     // do passo 1.7
-```
-
-Depois, faça commit e push dessas alterações.
+`SHARED_FOLDER_ID` e `SPREADSHEET_IDS` já estão preenchidos em
+[`js/config.js`](js/config.js). Só falta o `CLIENT_ID` do passo 2 (se ainda
+não tiver sido preenchido). Depois de qualquer alteração, faça commit e push.
 
 ### 4. Publicar no GitHub Pages
 
@@ -120,14 +110,14 @@ Depois, faça commit e push dessas alterações.
   conseguir enviar os formulários de registro/conteúdo/guia.
 - Para adicionar ou remover alguém da equipe, é só atualizar a lista de
   **usuários de teste** no Google Cloud Console e a lista de **Editores** na
-  pasta/planilha do Drive.
+  pasta e nas planilhas do Drive.
 
 ## Estrutura de arquivos
 
 ```
 index.html        Estrutura da página e das abas
 style.css         Estilo visual
-js/config.js      Client ID, IDs da pasta/planilha compartilhadas e opções dos formulários
+js/config.js      Client ID, IDs da pasta/planilhas compartilhadas e opções dos formulários
 js/auth.js        Login Google sob demanda (só ao inserir conteúdo)
 js/drive.js       Leitura pública (Google Visualization API) e escrita autenticada (Drive/Sheets API)
 js/app.js         Lógica das abas, formulários e listagens
